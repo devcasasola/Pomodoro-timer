@@ -1,0 +1,227 @@
+<!--Pomodoro-timer by devcasasola-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pomodoro Timer / devcasasola</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    body {
+      background: #f7eaea;
+      font-family: 'Archivo Black', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .mode-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f7d6d6;
+      color: #145c2c;
+      border-radius: 2rem;
+      padding: 0.5rem 1.5rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 2px solid #145c2c;
+    }
+    .mode-label i {
+      font-size: 1.3rem;
+    }
+    .timer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2.5rem;
+    }
+    .timer-digits {
+      color: #d62d2a;
+      font-size: 10rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+    .timer-digits .minutes,
+    .timer-digits .seconds {
+      display: block;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .control-btn {
+      background: #fff;
+      color: #145c2c;
+      border: none;
+      border-radius: 1.2rem;
+      padding: 1rem 1.5rem;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(20,92,44,0.07);
+      border: 2px solid #145c2c;
+    }
+    .control-btn:active,
+    .control-btn.active {
+      background: #d62d2a;
+      color: #fff;
+      border-color: #d62d2a;
+    }
+    .control-btn.play {
+      background: #d62d2a;
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: bold;
+      border-color: #d62d2a;
+    }
+    .control-btn.pause {
+      background: #145c2c;
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: bold;
+      border-color: #145c2c;
+    }
+    .control-btn.skip {
+      background: #fff;
+      color: #d62d2a;
+      border-color: #d62d2a;
+    }
+    .control-btn.skip:active {
+      background: #d62d2a;
+      color: #fff;
+    }
+    @media (max-width: 600px) {
+      .timer-digits {
+        font-size: 5rem;
+      }
+      .controls .control-btn {
+        font-size: 1.5rem;
+        padding: 0.7rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mode-label"><i class="fa-solid fa-brain"></i> <span id="mode">Focus</span></div>
+  <div class="timer">
+    <div class="timer-digits">
+      <span class="minutes" id="minutes">25</span>
+      <span class="seconds" id="seconds">00</span>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="control-btn play" id="start"><i class="fa-solid fa-play"></i></button>
+    <button class="control-btn skip" id="skip"><i class="fa-solid fa-forward"></i></button>
+  </div>
+  <script>
+    // Pomodoro logic
+    let workTime = 25 * 60;
+    let breakTime = 5 * 60;
+    let isWork = true;
+    let time = workTime;
+    let timerInterval = null;
+    let running = false;
+
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const modeEl = document.getElementById('mode');
+    const startBtn = document.getElementById('start');
+    const skipBtn = document.getElementById('skip');
+    const playIcon = '<i class="fa-solid fa-play"></i>';
+    const pauseIcon = '<i class="fa-solid fa-pause"></i>';
+
+    function updateDisplay() {
+      let m = Math.floor(time / 60);
+      let s = time % 60;
+      minutesEl.textContent = m.toString().padStart(2, '0');
+      secondsEl.textContent = s.toString().padStart(2, '0');
+      modeEl.textContent = isWork ? 'Focus' : 'Break';
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      running = true;
+      startBtn.classList.remove('play');
+      startBtn.classList.add('pause');
+      startBtn.innerHTML = pauseIcon;
+      timerInterval = setInterval(() => {
+        time--;
+        updateDisplay();
+        if (time < 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          running = false;
+          if (isWork) {
+            // Switch to break automatically
+            isWork = false;
+            time = breakTime;
+            updateDisplay();
+            startTimer();
+          } else {
+            // Stop after break
+            isWork = true;
+            time = workTime;
+            updateDisplay();
+            startBtn.classList.remove('pause');
+            startBtn.classList.add('play');
+            startBtn.innerHTML = playIcon;
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (!timerInterval) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      running = false;
+      startBtn.classList.remove('pause');
+      startBtn.classList.add('play');
+      startBtn.innerHTML = playIcon;
+    }
+
+    function skipTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      running = false;
+      if (isWork) {
+        // Skip to break
+        isWork = false;
+        time = breakTime;
+        updateDisplay();
+        startBtn.classList.remove('pause');
+        startBtn.classList.add('play');
+        startBtn.innerHTML = playIcon;
+      } else {
+        // Skip to next work session
+        isWork = true;
+        time = workTime;
+        updateDisplay();
+        startBtn.classList.remove('pause');
+        startBtn.classList.add('play');
+        startBtn.innerHTML = playIcon;
+      }
+    }
+
+    startBtn.addEventListener('click', function() {
+      if (running) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    });
+    skipBtn.addEventListener('click', skipTimer);
+
+    updateDisplay();
+  </script>
+</body>
+</html>
