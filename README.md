@@ -1,2 +1,2 @@
 # Pomodoro-timer
-A minimalist pomodoro timer in htm, css and javascript
+A minimalist pomodoro timer in html, css and javascript
